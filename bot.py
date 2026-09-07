@@ -1,4 +1,5 @@
 """Bot Telegram educatif — webhook + Gemini."""
+import asyncio
 import json
 import logging
 import os
@@ -11,7 +12,6 @@ from telegram.ext import (
     Application,
     CommandHandler,
     MessageHandler,
-    ContextTypes,
     filters,
 )
 from reportlab.lib.pagesizes import A4
@@ -83,33 +83,13 @@ def _gemini_texte(sujet):
     return None
 
 
-def _claude_texte(sujet):
-    if not ANTHROPIC_API_KEY:
-        return None
-    try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        message = client.messages.create(
-            model="claude-sonnet-4-5",
-            max_tokens=800,
-            messages=[{"role": "user", "content": (
-                "Explique le sujet suivant a un enfant de maniere simple, "
-                f"en francais : {sujet}"
-            )}],
-        )
-        return message.content[0].text
-    except Exception as e:
-        logger.error("Claude : %s", e)
-        return None
-
-
 def generer_texte_educatif(sujet):
-    texte = _gemini_texte(sujet) or _claude_texte(sujet)
+    texte = _gemini_texte(sujet)
     if texte:
         return texte
     return (
         f"Fiche sur : {sujet}\n\n"
-        "Ajoute GEMINI_API_KEY sur Render (cle Google AI Studio, comme EduMentor)."
+        "Ajoute GEMINI_API_KEY sur Render."
     )
 
 
@@ -204,6 +184,11 @@ async def recevoir_video(update, context):
 
 
 def main():
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
+
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", start))
