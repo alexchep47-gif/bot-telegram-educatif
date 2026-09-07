@@ -8,6 +8,10 @@ services:
     envVars:
       - key: BOT_TOKEN
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: WEBHOOK_URL
